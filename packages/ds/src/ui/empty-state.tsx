@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
 
-/** Alto mínimo del estado vacío (prototipo, .empty). */
+/** Alto mínimo del estado vacío (diseño, .empty). */
 const ALTO_MINIMO = 380;
 const ANCHO_TEXTO = 560;
 

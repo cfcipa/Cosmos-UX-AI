@@ -8,9 +8,9 @@ import type { SxProps, Theme } from "@mui/material/styles";
 /** Porcentaje entero de `parte` sobre `total` (0 si el total es 0). */
 const porcentaje = (parte: number, total: number) => (total ? Math.round((parte / total) * 100) : 0);
 
-/** Grosor de la pista según el prototipo: fina en filas, media en cabeceras. */
+/** Grosor de la pista según el diseño: fina en filas, media en cabeceras. */
 const GROSOR = { fino: 0.5, medio: 0.75 } as const;
-/** Ancho del progreso con etiquetas en las filas de extracto. */
+/** Ancho del progreso con etiquetas en las filas de lista. */
 const ANCHO_ETIQUETADO = 17.5;
 
 /** Barra de progreso (LinearProgress). Completa toma el tono de éxito; si no, el primario. */
@@ -31,7 +31,7 @@ export function ProgressBar({ parte, total, grosor = "fino", sx }: { parte: numb
   );
 }
 
-/** Barra con "12 / 40" y porcentaje debajo (filas de extracto). */
+/** Barra con "12 / 40" y porcentaje debajo (filas de lista). */
 export function ProgressLabeled({ parte, total }: { parte: number; total: number }) {
   return (
     <Box sx={(t) => ({ display: "flex", flexDirection: "column", gap: 0.25, width: t.spacing(ANCHO_ETIQUETADO) })}>

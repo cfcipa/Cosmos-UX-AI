@@ -29,7 +29,7 @@ export const tones: Record<Tone, { bg: string; fg: string; sel: string }> = {
   neutral: { bg: grey[200], fg: text.secondary, sel: "rgba(16,24,64,.08)" },
 };
 
-/** Presencia de IA (borde, aura, insignia). Fuera de Cosmos como tokens; tomados del prototipo. */
+/** Presencia de IA (borde, aura, insignia). Fuera de Cosmos como tokens; tomados del diseño. */
 export const ai = {
   borderStrong: "#2464c9",
   borderEnd: "#4c82d9",
@@ -39,7 +39,7 @@ export const ai = {
   auraEnd: "rgba(255,255,255,0)",
   innerShadow: "rgba(36,100,201,.1)",
   hoverBackground: "#f1f5fc",
-  /** Degradado del marco de la insignia de IA (fuera de Cosmos: tomado del prototipo). */
+  /** Degradado del marco de la insignia de IA (fuera de Cosmos: tomado del diseño). */
   gradStart: "#1053b7",
   gradMid: "#2464c9",
   gradEnd: "#00b6cf",

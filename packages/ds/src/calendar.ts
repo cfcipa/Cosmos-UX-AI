@@ -35,7 +35,7 @@ export function parseMonto(texto: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Mes siguiente al de una fecha ISO (el pago sigue al cierre del período); sin fecha, el mes actual. */
+/** Mes siguiente al de una fecha ISO; sin fecha, el mes actual. */
 export const mesSiguienteDeIso = (iso: string | null | undefined): Mes => {
   if (iso) return desplazarMes(mesDeIso(iso), 1);
   const hoy = new Date();

@@ -17,7 +17,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import WalletIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 
-/** Nombres de ícono (los de Lucide del prototipo) → ícono de MUI. Los módulos los nombran en su definición. */
+/** Nombres de ícono (los de Lucide del diseño) → ícono de MUI. Los módulos los nombran en su definición. */
 const ICONOS = {
   plus: AddIcon,
   "arrow-left": ArrowBackIcon,

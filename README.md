@@ -13,11 +13,11 @@ y sus herramientas; estos paquetes ponen todo lo demás (tema, componentes, asis
 **Cómo instalar el asistente en un producto:** [`packages/assistant/README.md`](packages/assistant/README.md).
 
 ## Requisitos
-Next 16 con Turbopack, React 19 y MUI 9. Los paquetes se publican como TypeScript fuente: el producto los compila con
+Next 16 con Turbopack, React 19 y MUI 9. **Ningún modelo:** el repo no importa ninguno; cada producto elige el suyo y su proveedor en su ruta de chat. Los paquetes se publican como TypeScript fuente: el producto los compila con
 `transpilePackages`. El compilador de assistant-ui (`"use generative"`) solo se probó con Turbopack.
 
 ## Estado
-Validado en dos productos internos de dominios distintos (pagos e inventario) dentro de un monorepo; esos productos no viven aquí.
+Validado en dos productos internos de dominios distintos; esos productos no viven aquí.
 Sin probar: instalación desde un registro, otras versiones de Next o MUI, productos que no usen MUI y modo oscuro.
 
 ## Desarrollo

@@ -19,21 +19,7 @@ export function formatDate(iso: string | null | undefined): string {
 export const pluralize = (n: number, singular: string, plural: string) =>
   `${n} ${n === 1 ? singular : plural}`;
 
-/** Texto de vencimiento a partir de los días que faltan (negativo: ya venció). */
-export function formatVence(dias: number | null | undefined): {
-  texto: string;
-  tone: "off" | "due" | "warn" | "ok";
-} {
-  if (dias == null) return { texto: "-", tone: "off" };
-  if (dias < 0)
-    return { texto: `hace ${pluralize(-dias, "día", "días")}`, tone: "due" };
-  if (dias === 0) return { texto: "hoy", tone: "due" };
-  if (dias === 1) return { texto: "mañana", tone: "due" };
-  if (dias <= 3) return { texto: `${dias} días`, tone: "warn" };
-  return { texto: `${dias} días`, tone: "ok" };
-}
-
-/** Rellena "{clave}" en un texto de copy: interpolar("¿Por qué {x}?", { x: "Retefuente" }). */
+/** Rellena "{clave}" en un texto de copy: interpolar("Hola {nombre}", { nombre: "Ana" }). */
 export const interpolar = (texto: string, vars: Record<string, string | number>) =>
   texto.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
 

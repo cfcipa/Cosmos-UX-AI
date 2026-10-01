@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 
-/** Ancho máximo del buscador en línea (prototipo). */
+/** Ancho máximo del buscador en línea (diseño). */
 const ANCHO_MAXIMO = 52.5;
 
 /** Buscador en línea de un panel. */

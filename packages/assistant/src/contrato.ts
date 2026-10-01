@@ -14,7 +14,7 @@ export type Inicio = {
  */
 export type ContratoPantalla = {
   id: string;
-  /** Cómo se llama la pantalla para el modelo: «Inventario · Productos». */
+  /** Cómo se llama la pantalla para el modelo: «Nombre del módulo · Pantalla». */
   nombre: string;
   /** Qué rutas cubre. */
   aplica: (pathname: string) => boolean;

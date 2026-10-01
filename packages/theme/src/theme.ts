@@ -55,7 +55,7 @@ declare module "@mui/material/styles" {
 
 declare module "@mui/material/Chip" {
   interface ChipPropsVariantOverrides {
-    /** Chip de filtro aplicado ("Proveedor: 3 seleccionados"): fondo primario claro y × que se aviva al pasar el cursor. */
+    /** Chip de filtro aplicado ("Estado: 3 seleccionados"): fondo primario claro y × que se aviva al pasar el cursor. */
     applied: true;
   }
 }
@@ -172,7 +172,7 @@ export const theme = createTheme({
     MuiBackdrop: { styleOverrides: { root: { backgroundColor: scrim, "&.MuiBackdrop-invisible": { backgroundColor: "transparent" } } } },
     MuiPopover: { defaultProps: { elevation: 8 } },
     MuiMenu: { defaultProps: { elevation: 8 } },
-    // Ítem de menú del prototipo (.mi): 36px, 16/24, casilla de 3px de padding.
+    // Ítem de menú del diseño (.mi): 36px, 16/24, casilla de 3px de padding.
     MuiMenuItem: {
       styleOverrides: {
         root: { minHeight: 36, padding: "6px 16px", gap: 8, fontSize: "1rem", lineHeight: 1.5, letterSpacing: ".15px", "& .MuiCheckbox-root": { padding: 3 } },
@@ -199,7 +199,7 @@ export const theme = createTheme({
         { props: { severity: "success", variant: "standard" }, style: { backgroundColor: success[50], color: text.primary, "& .MuiAlert-icon": { color: success[900] } } },
       ],
     },
-    // Tablas de detalle (conceptos, impuestos): filas de 34, encabezado gris, línea divisoria fina.
+    // Tablas de detalle: filas de 34, encabezado gris, línea divisoria fina.
     MuiTableRow: {
       styleOverrides: {
         root: { "&.MuiTableRow-hover:hover, &.Mui-selected, &.Mui-selected:hover": { backgroundColor: primary[50] } },
@@ -217,7 +217,7 @@ export const theme = createTheme({
     MuiDataGrid: {
       styleOverrides: {
         root: {
-          // Tipografía de celda = body2 (13/16, .17px) del prototipo: DataGrid la hereda del root, no de cada celda.
+          // Tipografía de celda = body2 (13/16, .17px) del diseño: DataGrid la hereda del root, no de cada celda.
           border: 0,
           fontSize: ".8125rem",
           lineHeight: "1rem",

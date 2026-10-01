@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import type { Explicacion } from "./explicacion";
 
-/** Ancho del panel lateral del prototipo. */
+/** Ancho del panel lateral del diseño. */
 const ANCHO_PANEL = 320;
 
 /** Textos fijos del drawer (viven en los textos de la pantalla; el drawer no conoce ningún dominio). */

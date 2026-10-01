@@ -5,7 +5,7 @@ import SvgIcon, { type SvgIconProps } from "@mui/material/SvgIcon";
 import { useTheme } from "@mui/material/styles";
 import { useId, type ComponentProps } from "react";
 
-/** Tamaños de los íconos de marca (px del prototipo): campos 16, filas de tabla 14. */
+/** Tamaños de los íconos de marca (px del diseño): campos 16, filas de tabla 14. */
 const TAMANOS = { md: 16, sm: 14 } as const;
 export type TamanoMarca = keyof typeof TAMANOS;
 

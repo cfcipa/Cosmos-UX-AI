@@ -8,7 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 
-/** Ancho del diálogo de flujo según el prototipo. */
+/** Ancho del diálogo de flujo según el diseño. */
 const ANCHO = 75;
 /** Alto máximo respecto de la ventana. */
 const ALTO_MAXIMO = "88vh";

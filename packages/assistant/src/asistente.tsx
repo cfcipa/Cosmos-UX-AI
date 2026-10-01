@@ -27,13 +27,19 @@ const MITAD = "50%";
  * lateral, completa) o que el modelo pide con la herramienta `abrir_canvas`. La pantalla nunca se desmonta. El contenedor
  * es su propio nivel de apilamiento (`isolation`): el encabezado de la aplicación queda por encima de todo y su sombra cae igual sobre la pantalla y sobre el asistente.
  */
-export function Asistente({ pantallas, toolkit, children }: { pantallas: readonly ContratoPantalla[]; toolkit: Toolkit; children: ReactNode }) {
+export function Asistente({ pantallas, toolkit, children, api, instrucciones }: {
+  pantallas: readonly ContratoPantalla[]; toolkit: Toolkit; children: ReactNode;
+  /** Ruta del backend del chat (por defecto `/api/chat`). */
+  api?: string;
+  /** Instrucciones base del asistente: idioma, tono y rol (por defecto, el asistente de Sinco en español). */
+  instrucciones?: string;
+}) {
   const { superficie, canvas, setSuperficie } = useSuperficie();
   const [ancho, setAncho] = useState(LATERAL.inicial);
   const raiz = useRef<HTMLDivElement>(null);
   const lateral = !canvas && superficie === "lateral";
   return (
-    <AssistantProvider pantallas={pantallas} toolkit={toolkit}>
+    <AssistantProvider pantallas={pantallas} toolkit={toolkit} api={api} instrucciones={instrucciones}>
       <Box ref={raiz} sx={{ position: "relative", isolation: "isolate", flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
         <Box
           // Con el canvas encima la pantalla sigue montada y con su scroll, pero fuera del alcance del teclado y los lectores.

@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 import textos from "./textos.json";
 
 export type Propuesta = {
-  /** Qué se propone: «Confirmar 2 compras». */
+  /** Qué se propone: «Confirmar 2 elementos». */
   titulo: string;
   /** Por qué, si el modelo lo dio. */
   motivo?: string;
