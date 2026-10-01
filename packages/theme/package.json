@@ -1,0 +1,16 @@
+{
+  "name": "@sinco/theme",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tema Cosmos de Sinco para MUI 9: tokens, tema y piezas del asistente (SincoAsistente).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@mui/material": "^9.4.0",
+    "@mui/x-data-grid": "^9.14.0",
+    "react": "^19"
+  }
+}
