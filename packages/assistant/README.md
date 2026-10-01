@@ -13,8 +13,9 @@ insignia de IA (`@sinco/ds`). Forma, color y tipografía del hilo viven en el te
   El toolkit del núcleo se importa aparte: `@sinco/assistant/nucleo.toolkit`.
 
 ## Instalarlo en un producto
-1. Dependencias: `@sinco/assistant`, `@sinco/ds`, `@sinco/theme` y `@sinco/content`. En `next.config.ts`: `withAui(...)` y
-   `transpilePackages` con los cuatro.
+1. Dependencias: `@sinco/assistant`, `@sinco/ds`, `@sinco/theme` y `@sinco/content`. Los demás (assistant-ui, `ai`, `zod`…) llegan
+   solos como peers, **salvo dos que hay que instalar a mano**: `@assistant-ui/next` (trae `withAui`) y el proveedor del modelo de
+   la ruta (aquí `@ai-sdk/google`). En `next.config.ts`: `withAui(...)` y `transpilePackages` con los cuatro paquetes.
 2. En `tsconfig.json`, el alias del toolkit del núcleo:
    `"@sinco/assistant/nucleo.toolkit": ["<ruta a packages/assistant/src/nucleo.toolkit.tsx>"]`.
    **Es obligatorio:** el compilador de `"use generative"` solo sigue imports relativos y alias de `tsconfig`; un paquete "pelado"
