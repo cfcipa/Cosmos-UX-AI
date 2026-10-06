@@ -9,7 +9,9 @@ import { AssistantProvider } from "./assistant-provider";
 import { ProveedorMarca } from "./marca";
 import { VistaCanvas } from "./documento-canvas";
 import { PanelAsistente, SIN_MOVIMIENTO } from "./panel-asistente";
-import { Pildora, RESERVA_PILDORA } from "./pildora";
+import { RESERVA_PILDORA } from "./medidas-pildora";
+import { Pildora } from "./pildora";
+import type { LlamadaPendiente } from "./vista-previa";
 import { Separador } from "./separador";
 
 const aparece = keyframes`from { opacity: 0; } to { opacity: 1; }`;
@@ -27,7 +29,7 @@ const MITAD = "50%";
  * lateral, completa) o que el modelo pide con la herramienta `abrir_canvas`. La pantalla nunca se desmonta. El contenedor
  * es su propio nivel de apilamiento (`isolation`): el encabezado de la aplicación queda por encima de todo y su sombra cae igual sobre la pantalla y sobre el asistente.
  */
-export function Asistente({ toolkit, children, sugerencias, api, instrucciones, marca, hilos }: {
+export function Asistente({ toolkit, children, sugerencias, api, instrucciones, marca, hilos, textoAprobacion }: {
   toolkit: Toolkit; children: ReactNode;
   /** Sugerencias del chat vacío para la pantalla actual (`Suggestions()` de assistant-ui). Pasa una lista estable por pantalla. */
   sugerencias?: readonly SuggestionConfig[];
@@ -39,6 +41,8 @@ export function Asistente({ toolkit, children, sugerencias, api, instrucciones, 
   marca?: ReactNode;
   /** Dónde guarda el producto los chats (`RemoteThreadListAdapter` de assistant-ui). Sin él, los chats viven en memoria. */
   hilos?: RemoteThreadListAdapter;
+  /** Lo que dice la vista previa de la píldora cuando una herramienta espera a la persona. Por defecto, un aviso genérico. */
+  textoAprobacion?: (llamada: LlamadaPendiente) => string;
 }) {
   const { superficie, canvas, setSuperficie } = useSuperficie();
   const [ancho, setAncho] = useState(LATERAL.inicial);
@@ -68,7 +72,7 @@ export function Asistente({ toolkit, children, sugerencias, api, instrucciones, 
           </Box>
         ) : null}
         {!canvas && superficie !== "cerrada" ? <PanelAsistente modo={superficie} ancho={ancho} maxAncho={MITAD} /> : null}
-        {!canvas && superficie === "cerrada" ? <Pildora /> : null}
+        {!canvas && superficie === "cerrada" ? <Pildora textoAprobacion={textoAprobacion} /> : null}
       </Box>
       </ProveedorMarca>
     </AssistantProvider>

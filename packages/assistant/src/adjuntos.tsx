@@ -37,10 +37,10 @@ export const AdjuntosComposer: FC = () => (
   </ComposerPrimitive.Attachments>
 );
 
-/** «+» de la barra del composer. Solo aparece si el runtime tiene un adaptador de adjuntos. */
-export const BotonAdjuntar: FC = () => (
+/** «+» de la barra del composer. Solo aparece si el runtime tiene un adaptador de adjuntos. `alAdjuntar` se suma al clic (la píldora abre el asistente). */
+export const BotonAdjuntar: FC<{ alAdjuntar?: () => void }> = ({ alAdjuntar }) => (
   <AuiIf condition={(s) => s.thread.capabilities.attachments}>
-    <ComposerPrimitive.AddAttachment render={<BotonAccion label="Adjuntar archivo" />}><AddIcon fontSize="small" /></ComposerPrimitive.AddAttachment>
+    <ComposerPrimitive.AddAttachment render={<BotonAccion label="Adjuntar archivo" onClick={alAdjuntar} />}><AddIcon fontSize="small" /></ComposerPrimitive.AddAttachment>
   </AuiIf>
 );
 
