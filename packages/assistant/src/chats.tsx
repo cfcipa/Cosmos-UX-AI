@@ -133,9 +133,11 @@ const LARGO_TITULO = 60;
 export function TituloDelChat() {
   const aui = useAui();
   const conTitulo = useAuiState((s) => Boolean(s.threadListItem.title));
+  // Un chat nuevo no se puede renombrar hasta que el primer mensaje lo vuelve regular.
+  const regular = useAuiState((s) => s.threadListItem.status === "regular");
   const primera = useAuiState((s) => primeraPregunta(s.thread.messages));
   useEffect(() => {
-    if (!conTitulo && primera) aui.threadListItem.rename(primera.slice(0, LARGO_TITULO));
-  }, [aui, conTitulo, primera]);
+    if (regular && !conTitulo && primera) aui.threadListItem.rename(primera.slice(0, LARGO_TITULO));
+  }, [aui, regular, conTitulo, primera]);
   return null;
 }

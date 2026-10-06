@@ -7,9 +7,9 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import StopIcon from "@mui/icons-material/Stop";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
 import type { InputBaseComponentProps } from "@mui/material/InputBase";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import Typography from "@mui/material/Typography";
@@ -21,6 +21,7 @@ import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
 import type { FC } from "react";
 import { BotonAccion, Ramas } from "./acciones-mensaje";
+import { AdjuntosComposer, AdjuntosMensaje, AvisoAdjuntoFallido, BotonAdjuntar, ZonaSoltar } from "./adjuntos";
 import { AvisoIA, ErrorRespuesta, Pensando, RespuestaDetenida } from "./estados-mensaje";
 import { HerramientaGenerica } from "./herramienta-generica";
 import { Inicios } from "./inicios";
@@ -28,7 +29,7 @@ import { useMarca } from "./marca";
 import { COMPONENTES_MARKDOWN } from "./markdown";
 
 /** Filas máximas del campo de texto antes de hacer scroll. */
-const FILAS_MAX_INPUT = 8;
+const FILAS_MAX_INPUT = 6;
 
 // Las primitivas de assistant-ui vienen sin estilo. El aspecto se arma solo con valores estándar del tema de MUI del producto
 // (paleta, espaciado, tipografía), así que el asistente toma el tema que ya exista. Cada pieza lleva nombre y slot de MUI:
@@ -49,6 +50,7 @@ const UserBubble = styled("div", pieza("mensajePersona"))(({ theme }) => ({
   alignSelf: "flex-end", maxWidth: "85%", padding: theme.spacing(1.25, 1.75), borderRadius: theme.spacing(2),
   backgroundColor: alpha(theme.palette.primary.main, 0.08), color: theme.palette.text.primary, ...theme.typography.body1,
 }));
+const ColumnaAdjuntos = styled("div")(({ theme }) => ({ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: theme.spacing(0.5), marginBottom: theme.spacing(0.5), "&:empty": { display: "none" } }));
 const FilaPersona = styled("div")(({ theme }) => ({
   display: "flex", justifyContent: "flex-end", alignItems: "center", gap: theme.spacing(0.5),
   "& .acciones-persona": { opacity: 0, transition: theme.transitions.create("opacity", { duration: theme.transitions.duration.shortest }) },
@@ -96,6 +98,7 @@ const AssistantMessage: FC = () => {
 
 const UserMessage: FC = () => (
   <UserMessageRoot>
+    <ColumnaAdjuntos><AdjuntosMensaje /></ColumnaAdjuntos>
     <FilaPersona>
       <ActionBarPrimitive.Root hideWhenRunning autohide="not-last" className="acciones-persona">
         <ActionBarPrimitive.Edit render={<BotonAccion label="Editar" />}><EditOutlinedIcon fontSize="inherit" /></ActionBarPrimitive.Edit>
@@ -142,29 +145,40 @@ const EntradaComposer = ({ inputRef, type: _type, style: _style, value: _value, 
   <ComposerPrimitive.Input ref={inputRef} minRows={1} maxRows={FILAS_MAX_INPUT} {...(props as object)} />
 );
 
+/** Como en Cosmos: el texto arriba y, debajo, la barra con «+» a la izquierda y enviar o detener a la derecha. Los adjuntos van sobre el texto. */
 const Composer: FC = () => {
   const placeholder = useAuiState((s) => (s.thread.messages.length > 0 ? "¿Qué hacemos ahora?" : "¿Por dónde empezamos?"));
+  const hayAdjuntos = useAuiState((s) => s.composer.attachments.length > 0);
   return (
     <ComposerPrimitive.Root>
-      <OutlinedInput
-        fullWidth
-        multiline
-        autoFocus
-        size="small"
-        placeholder={placeholder}
-        inputComponent={EntradaComposer}
-        slotProps={{ input: { "aria-label": placeholder } }}
-        endAdornment={
-          <InputAdornment position="end" sx={{ alignSelf: "flex-end", height: "auto", maxHeight: "none" }}>
-            <AuiIf condition={(s) => !s.composer.canCancel}>
-              <ComposerPrimitive.Send render={<IconButton size="small" color="primary" aria-label="Enviar" />}><ArrowUpwardIcon fontSize="small" /></ComposerPrimitive.Send>
-            </AuiIf>
-            <AuiIf condition={(s) => s.composer.canCancel}>
-              <ComposerPrimitive.Cancel render={<IconButton size="small" color="primary" aria-label="Detener" />}><StopIcon fontSize="small" /></ComposerPrimitive.Cancel>
-            </AuiIf>
-          </InputAdornment>
-        }
-      />
+      <ZonaSoltar>
+        <OutlinedInput
+          fullWidth
+          multiline
+          autoFocus
+          placeholder={placeholder}
+          inputComponent={EntradaComposer}
+          slotProps={{ input: { "aria-label": placeholder } }}
+          startAdornment={hayAdjuntos ? <Box sx={{ width: "100%", display: "flex", flexWrap: "wrap", gap: 1 }}><AdjuntosComposer /></Box> : undefined}
+          endAdornment={
+            <Box sx={{ width: "100%", display: "flex", alignItems: "center", gap: 0.5 }}>
+              <BotonAdjuntar />
+              <Box sx={{ flex: 1 }} />
+              <AuiIf condition={(s) => !s.composer.canCancel}>
+                <ComposerPrimitive.Send render={<IconButton size="small" color="primary" aria-label="Enviar" />}><ArrowUpwardIcon fontSize="small" /></ComposerPrimitive.Send>
+              </AuiIf>
+              <AuiIf condition={(s) => s.composer.canCancel}>
+                <ComposerPrimitive.Cancel render={<IconButton size="small" color="primary" aria-label="Detener" />}><StopIcon fontSize="small" /></ComposerPrimitive.Cancel>
+              </AuiIf>
+            </Box>
+          }
+          sx={{
+            flexWrap: "wrap", alignItems: "flex-end", gap: 1, pt: 2, pb: 1, px: 1.75,
+            "& .MuiInputBase-input": { width: "100%", minWidth: 0, p: 0 },
+          }}
+        />
+      </ZonaSoltar>
+      <AvisoAdjuntoFallido />
     </ComposerPrimitive.Root>
   );
 };
