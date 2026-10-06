@@ -3,21 +3,24 @@
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CheckIcon from "@mui/icons-material/Check";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import StopIcon from "@mui/icons-material/Stop";
+import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import type { InputBaseComponentProps } from "@mui/material/InputBase";
 import OutlinedInput from "@mui/material/OutlinedInput";
-import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 import { alpha, styled } from "@mui/material/styles";
 import {
   ActionBarPrimitive, AuiIf, ComposerPrimitive, MessagePrimitive, ThreadPrimitive, useAuiState,
 } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
-import type { ComponentProps, FC } from "react";
+import type { FC } from "react";
+import { BotonAccion, Ramas } from "./acciones-mensaje";
 import { AvisoIA, ErrorRespuesta, Pensando, RespuestaDetenida } from "./estados-mensaje";
 import { HerramientaGenerica } from "./herramienta-generica";
 import { Inicios } from "./inicios";
@@ -46,23 +49,25 @@ const UserBubble = styled("div", pieza("mensajePersona"))(({ theme }) => ({
   alignSelf: "flex-end", maxWidth: "85%", padding: theme.spacing(1.25, 1.75), borderRadius: theme.spacing(2),
   backgroundColor: alpha(theme.palette.primary.main, 0.08), color: theme.palette.text.primary, ...theme.typography.body1,
 }));
+const FilaPersona = styled("div")(({ theme }) => ({
+  display: "flex", justifyContent: "flex-end", alignItems: "center", gap: theme.spacing(0.5),
+  "& .acciones-persona": { opacity: 0, transition: theme.transitions.create("opacity", { duration: theme.transitions.duration.shortest }) },
+  "&:hover .acciones-persona, &:focus-within .acciones-persona": { opacity: 1 },
+}));
+const Edicion = styled("div", pieza("edicion"))(({ theme }) => ({
+  display: "flex", flexDirection: "column", gap: theme.spacing(1), padding: theme.spacing(1.5), border: `1px solid ${theme.palette.divider}`, borderRadius: theme.spacing(2),
+}));
 const AssistantRoot = styled(MessagePrimitive.Root, pieza("mensajeAsistente"))(({ theme }) => ({
   display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", alignItems: "start", columnGap: theme.spacing(1),
 }));
-const Actions = styled(ActionBarPrimitive.Root)(({ theme }) => ({ display: "flex", gap: theme.spacing(0.25), marginTop: theme.spacing(0.5) }));
+const FilaAcciones = styled("div")(({ theme }) => ({ display: "flex", alignItems: "center", gap: theme.spacing(0.5), marginTop: theme.spacing(0.5) }));
+const Actions = styled(ActionBarPrimitive.Root)(({ theme }) => ({ display: "flex", gap: theme.spacing(0.25) }));
 const Markdown = styled("div", pieza("markdown"))(({ theme }) => ({ ...theme.typography.body1, overflowWrap: "anywhere" }));
 
 const Text: FC = () => (
   <Markdown>
     <MarkdownTextPrimitive remarkPlugins={[remarkGfm]} components={COMPONENTES_MARKDOWN} />
   </Markdown>
-);
-
-// La primitiva inyecta en el elemento de `render` su `onClick`, `disabled` y `ref`: hay que reenviarlos al botón.
-const ActionButton: FC<ComponentProps<typeof IconButton> & { label: string }> = ({ label, children, ...props }) => (
-  <Tooltip title={label}>
-    <IconButton size="small" aria-label={label} {...props}>{children}</IconButton>
-  </Tooltip>
 );
 
 const AssistantMessage: FC = () => {
@@ -74,13 +79,16 @@ const AssistantMessage: FC = () => {
     <MessagePrimitive.Parts components={{ Text, tools: { Fallback: HerramientaGenerica } }} />
     <ErrorRespuesta />
     <RespuestaDetenida />
+    <FilaAcciones>
+    <Ramas />
     <Actions hideWhenRunning autohide="not-last">
-      <ActionBarPrimitive.Copy render={<ActionButton label="Copiar" />}>
+      <ActionBarPrimitive.Copy render={<BotonAccion label="Copiar" />}>
         <AuiIf condition={(s) => s.message.isCopied}><CheckIcon fontSize="inherit" /></AuiIf>
         <AuiIf condition={(s) => !s.message.isCopied}><ContentCopyIcon fontSize="inherit" /></AuiIf>
       </ActionBarPrimitive.Copy>
-      <ActionBarPrimitive.Reload render={<ActionButton label="Regenerar" />}><RefreshIcon fontSize="inherit" /></ActionBarPrimitive.Reload>
+      <ActionBarPrimitive.Reload render={<BotonAccion label="Regenerar" />}><RefreshIcon fontSize="inherit" /></ActionBarPrimitive.Reload>
     </Actions>
+    </FilaAcciones>
     </div>
   </AssistantRoot>
   );
@@ -88,13 +96,41 @@ const AssistantMessage: FC = () => {
 
 const UserMessage: FC = () => (
   <UserMessageRoot>
-    <UserBubble><MessagePrimitive.Parts /></UserBubble>
+    <FilaPersona>
+      <ActionBarPrimitive.Root hideWhenRunning autohide="not-last" className="acciones-persona">
+        <ActionBarPrimitive.Edit render={<BotonAccion label="Editar" />}><EditOutlinedIcon fontSize="inherit" /></ActionBarPrimitive.Edit>
+      </ActionBarPrimitive.Root>
+      <UserBubble><MessagePrimitive.Parts /></UserBubble>
+    </FilaPersona>
+    <Ramas persona />
   </UserMessageRoot>
 );
 
+/** Editar un mensaje enviado, en su lugar. Avisa cuántas respuestas descarta; la versión original queda como rama anterior. */
+const EditarMensaje: FC = () => {
+  const descartadas = useAuiState((s) => s.thread.messages.slice(s.message.index + 1).filter((m) => m.role === "assistant").length);
+  return (
+    <MessagePrimitive.Root>
+      <ComposerPrimitive.Root>
+        <Edicion>
+          <OutlinedInput fullWidth multiline autoFocus size="small" inputComponent={EntradaComposer} slotProps={{ input: { "aria-label": "Editar mensaje" } }} />
+          {descartadas > 0 ? (
+            <Typography variant="caption" color="text.secondary">{descartadas === 1 ? "Al enviar se descarta 1 respuesta" : `Al enviar se descartan ${descartadas} respuestas`}</Typography>
+          ) : null}
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <ComposerPrimitive.Cancel render={<Button size="small" />}>Cancelar</ComposerPrimitive.Cancel>
+            <ComposerPrimitive.Send render={<Button size="small" variant="contained" />}>Enviar</ComposerPrimitive.Send>
+          </div>
+        </Edicion>
+      </ComposerPrimitive.Root>
+    </MessagePrimitive.Root>
+  );
+};
+
 const Message: FC = () => (
   <>
-    <AuiIf condition={(s) => s.message.role === "user"}><UserMessage /></AuiIf>
+    <AuiIf condition={(s) => s.message.role === "user" && !s.composer.isEditing}><UserMessage /></AuiIf>
+    <AuiIf condition={(s) => s.message.role === "user" && s.composer.isEditing}><EditarMensaje /></AuiIf>
     <AuiIf condition={(s) => s.message.role !== "user"}><AssistantMessage /></AuiIf>
   </>
 );
