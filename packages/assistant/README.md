@@ -86,6 +86,7 @@ contexto, sus sugerencias y sus herramientas con las APIs de assistant-ui, y cad
 | La marca que firma las respuestas | Propiedad `marca` de `<Asistente>` (por defecto, el destello de MUI) |
 | Rol, idioma y tono base | Propiedad `instrucciones` de `<Asistente>` (por defecto: asistente de Sinco, en español, breve) |
 | La ruta del chat | Propiedad `api` de `<Asistente>` (por defecto `/api/chat`) |
+| Dónde se guardan los chats | Propiedad `hilos` de `<Asistente>`: un `RemoteThreadListAdapter` de assistant-ui con el historial según su [guía de persistencia propia](https://www.assistant-ui.com/docs/integrations/persistence/custom-adapter). Sin ella, los chats viven en memoria |
 | Contexto, sugerencias y herramientas de cada pantalla | El producto, con `useAssistantContext`, `<Asistente sugerencias>` y `defineToolkit` |
 
 ## Sumar una pantalla

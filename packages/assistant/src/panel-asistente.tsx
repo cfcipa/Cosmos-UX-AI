@@ -1,6 +1,5 @@
 "use client";
 
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CloseIcon from "@mui/icons-material/Close";
 import CloseFullscreenIcon from "@mui/icons-material/CloseFullscreen";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
@@ -11,9 +10,10 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
 import { keyframes } from "@mui/material/styles";
 import { useEffect, type ReactNode } from "react";
+import { AccionesChat, SelectorChats } from "./chats";
 import { useSuperficie, type Superficie } from "./superficie";
 import { Thread } from "./thread";
 
@@ -43,12 +43,14 @@ function Accion({ label, onClick, children }: { label: string; onClick: () => vo
 export function EncabezadoAsistente({ modo }: { modo: Modo | "canvas" }) {
   const { setSuperficie, documento, verCanvas } = useSuperficie();
   return (
-    <Box sx={(t) => ({ display: "flex", alignItems: "center", gap: 1, px: 2, minHeight: t.spacing(ALTO_ENCABEZADO), borderBottom: 1, borderColor: "divider" })}>
-      <AutoAwesomeIcon fontSize="small" color="primary" />
-      <Typography variant="subtitle1" sx={{ flex: 1 }}>Asistente</Typography>
+    <Box sx={(t) => ({ display: "flex", alignItems: "center", gap: 0.5, pl: 1, pr: 1.5, minHeight: t.spacing(ALTO_ENCABEZADO), borderBottom: 1, borderColor: "divider" })}>
+      <SelectorChats />
+      <Box sx={{ flex: 1 }} />
       {documento && modo !== "canvas" ? (
         <Button size="small" startIcon={<DescriptionOutlinedIcon />} onClick={verCanvas}>Ver documento</Button>
       ) : null}
+      <AccionesChat />
+      <Divider orientation="vertical" flexItem sx={{ my: 1.5, mx: 0.5 }} />
       {modo === "flotante" ? <Accion label="Abrir en panel lateral" onClick={() => setSuperficie("lateral")}><ViewSidebarOutlinedIcon fontSize="small" /></Accion> : null}
       {modo === "lateral" ? <Accion label="Pantalla completa" onClick={() => setSuperficie("completa")}><OpenInFullIcon fontSize="small" /></Accion> : null}
       {modo === "completa" ? <Accion label="Abrir en panel lateral" onClick={() => setSuperficie("lateral")}><CloseFullscreenIcon fontSize="small" /></Accion> : null}

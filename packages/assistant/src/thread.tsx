@@ -11,16 +11,15 @@ import InputAdornment from "@mui/material/InputAdornment";
 import type { InputBaseComponentProps } from "@mui/material/InputBase";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
 import { alpha, styled } from "@mui/material/styles";
 import {
-  ActionBarPrimitive, AuiIf, ComposerPrimitive, ErrorPrimitive, MessagePrimitive, ThreadPrimitive, useAuiState,
-  type ToolCallMessagePartComponent,
+  ActionBarPrimitive, AuiIf, ComposerPrimitive, MessagePrimitive, ThreadPrimitive, useAuiState,
 } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ComponentProps, FC } from "react";
-import { EstadoHerramienta } from "./estado-herramienta";
+import { AvisoIA, ErrorRespuesta, Pensando, RespuestaDetenida } from "./estados-mensaje";
+import { HerramientaGenerica } from "./herramienta-generica";
 import { Inicios } from "./inicios";
 import { useMarca } from "./marca";
 import { COMPONENTES_MARKDOWN } from "./markdown";
@@ -59,11 +58,6 @@ const Text: FC = () => (
   </Markdown>
 );
 
-/** Fallback de herramienta sin interfaz propia: una línea con su estado. */
-const ToolFallback: ToolCallMessagePartComponent = ({ toolName, status }) => (
-  <EstadoHerramienta terminada={status.type !== "running"}>{toolName}</EstadoHerramienta>
-);
-
 // La primitiva inyecta en el elemento de `render` su `onClick`, `disabled` y `ref`: hay que reenviarlos al botón.
 const ActionButton: FC<ComponentProps<typeof IconButton> & { label: string }> = ({ label, children, ...props }) => (
   <Tooltip title={label}>
@@ -71,31 +65,15 @@ const ActionButton: FC<ComponentProps<typeof IconButton> & { label: string }> = 
   </Tooltip>
 );
 
-/** Verdadero entre el envío y el primer fragmento de la respuesta (condición de la documentación de assistant-ui). */
-const useEsperandoPrimerToken = () =>
-  useAuiState((s) => {
-    if (!s.thread.isRunning) return false;
-    const ultimo = s.thread.messages.at(-1);
-    return ultimo?.role === "assistant" && ultimo.parts.length === 0;
-  });
-
-const Generando: FC = () => {
-  const esperando = useEsperandoPrimerToken();
-  return esperando ? <EstadoHerramienta terminada={false}>Generando la respuesta…</EstadoHerramienta> : null;
-};
-
 const AssistantMessage: FC = () => {
   const marca = useMarca();
   return (
   <AssistantRoot>
     {marca}
     <div>
-    <MessagePrimitive.Parts components={{ Text, tools: { Fallback: ToolFallback } }} />
-    <MessagePrimitive.Error>
-      <ErrorPrimitive.Root>
-        <Typography color="error" variant="body2"><ErrorPrimitive.Message /></Typography>
-      </ErrorPrimitive.Root>
-    </MessagePrimitive.Error>
+    <MessagePrimitive.Parts components={{ Text, tools: { Fallback: HerramientaGenerica } }} />
+    <ErrorRespuesta />
+    <RespuestaDetenida />
     <Actions hideWhenRunning autohide="not-last">
       <ActionBarPrimitive.Copy render={<ActionButton label="Copiar" />}>
         <AuiIf condition={(s) => s.message.isCopied}><CheckIcon fontSize="inherit" /></AuiIf>
@@ -159,9 +137,10 @@ const Composer: FC = () => {
 export const Thread: FC = () => (
   <Root>
     <Viewport turnAnchor="top">
+      <AvisoIA />
       <AuiIf condition={(s) => s.thread.isEmpty}><Inicios /></AuiIf>
       <ThreadPrimitive.Messages>{() => <Message />}</ThreadPrimitive.Messages>
-      <Generando />
+      <Pensando />
       <Footer>
         <ThreadPrimitive.ScrollToBottom
           render={<IconButton size="small" aria-label="Ir al final" sx={{ position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)", bgcolor: "background.paper", boxShadow: 2, "&:disabled": { display: "none" } }} />}

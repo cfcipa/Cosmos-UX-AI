@@ -1,9 +1,10 @@
 "use client";
 
-import { AssistantRuntimeProvider, AuiConfig, Suggestions, Tools, useAssistantInstructions, type SuggestionConfig, type Toolkit } from "@assistant-ui/react";
+import { AssistantRuntimeProvider, AuiConfig, Suggestions, Tools, useAssistantInstructions, useRemoteThreadListRuntime, type AssistantRuntime, type RemoteThreadListAdapter, type SuggestionConfig, type Toolkit } from "@assistant-ui/react";
 import { AssistantChatTransport, useChatRuntime } from "@assistant-ui/ai-sdk";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { useMemo, type ReactNode } from "react";
+import { TituloDelChat } from "./chats";
 
 const RUTA_CHAT = "/api/chat";
 const SIN_SUGERENCIAS: readonly SuggestionConfig[] = [];
@@ -24,11 +25,7 @@ function InstruccionesBase({ instrucciones }: { instrucciones: string }) {
   return null;
 }
 
-/**
- * El runtime del asistente. No conoce ningún dominio: recibe el toolkit con todas las herramientas instaladas y las
- * sugerencias del chat vacío. El contexto de cada pantalla lo registra la pantalla misma con `useAssistantContext`.
- */
-export function AssistantProvider({ toolkit, children, sugerencias = SIN_SUGERENCIAS, api = RUTA_CHAT, instrucciones = INSTRUCCIONES_BASE }: {
+type Props = {
   toolkit: Toolkit; children: ReactNode;
   /** Sugerencias del chat vacío (`Suggestions()` de assistant-ui). Cambian con la pantalla: pasa una lista estable por pantalla. */
   sugerencias?: readonly SuggestionConfig[];
@@ -36,19 +33,42 @@ export function AssistantProvider({ toolkit, children, sugerencias = SIN_SUGEREN
   api?: string;
   /** Instrucciones base del asistente (idioma, tono, rol). Cada producto puede cambiarlas. */
   instrucciones?: string;
-}) {
+  /** Dónde guarda el producto los chats (`RemoteThreadListAdapter` de assistant-ui). Sin él, los chats viven en memoria. */
+  hilos?: RemoteThreadListAdapter;
+};
+
+const opcionesChat = (api: string) => ({
+  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+  transport: new AssistantChatTransport({ api }),
+});
+
+/** Los chats viven en memoria durante la sesión. */
+function RuntimeEnMemoria({ api, children }: { api: string; children: (runtime: AssistantRuntime) => ReactNode }) {
+  return children(useChatRuntime(opcionesChat(api)));
+}
+
+/** Los chats y sus mensajes los guarda el producto con su adaptador (guía de persistencia propia de assistant-ui). */
+function RuntimeConAdaptador({ api, adapter, children }: { api: string; adapter: RemoteThreadListAdapter; children: (runtime: AssistantRuntime) => ReactNode }) {
+  return children(useRemoteThreadListRuntime({ runtimeHook: () => useChatRuntime(opcionesChat(api)), adapter }));
+}
+
+/**
+ * El runtime del asistente. No conoce ningún dominio: recibe el toolkit con todas las herramientas instaladas y las
+ * sugerencias del chat vacío. El contexto de cada pantalla lo registra la pantalla misma con `useAssistantContext`.
+ */
+export function AssistantProvider({ toolkit, children, sugerencias = SIN_SUGERENCIAS, api = RUTA_CHAT, instrucciones = INSTRUCCIONES_BASE, hilos }: Props) {
   const config = useMemo(
     () => AuiConfig({ tools: Tools({ toolkit }), suggestions: Suggestions([...sugerencias]) }),
     [toolkit, sugerencias],
   );
-  const runtime = useChatRuntime({
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    transport: new AssistantChatTransport({ api }),
-  });
-  return (
+  const montar = (runtime: AssistantRuntime) => (
     <AssistantRuntimeProvider runtime={runtime} config={config}>
       <InstruccionesBase instrucciones={instrucciones} />
+      {hilos ? null : <TituloDelChat />}
       {children}
     </AssistantRuntimeProvider>
   );
+  return hilos
+    ? <RuntimeConAdaptador api={api} adapter={hilos}>{montar}</RuntimeConAdaptador>
+    : <RuntimeEnMemoria api={api}>{montar}</RuntimeEnMemoria>;
 }

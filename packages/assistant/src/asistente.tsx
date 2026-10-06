@@ -2,7 +2,7 @@
 
 import Box from "@mui/material/Box";
 import { keyframes } from "@mui/material/styles";
-import type { SuggestionConfig, Toolkit } from "@assistant-ui/react";
+import type { RemoteThreadListAdapter, SuggestionConfig, Toolkit } from "@assistant-ui/react";
 import { useRef, useState, type ReactNode } from "react";
 import { useSuperficie } from "./superficie";
 import { AssistantProvider } from "./assistant-provider";
@@ -27,7 +27,7 @@ const MITAD = "50%";
  * lateral, completa) o que el modelo pide con la herramienta `abrir_canvas`. La pantalla nunca se desmonta. El contenedor
  * es su propio nivel de apilamiento (`isolation`): el encabezado de la aplicación queda por encima de todo y su sombra cae igual sobre la pantalla y sobre el asistente.
  */
-export function Asistente({ toolkit, children, sugerencias, api, instrucciones, marca }: {
+export function Asistente({ toolkit, children, sugerencias, api, instrucciones, marca, hilos }: {
   toolkit: Toolkit; children: ReactNode;
   /** Sugerencias del chat vacío para la pantalla actual (`Suggestions()` de assistant-ui). Pasa una lista estable por pantalla. */
   sugerencias?: readonly SuggestionConfig[];
@@ -37,13 +37,15 @@ export function Asistente({ toolkit, children, sugerencias, api, instrucciones, 
   instrucciones?: string;
   /** Marca que firma cada respuesta (por defecto, el destello de MUI). Por ejemplo, la insignia de IA de tu sistema de diseño. */
   marca?: ReactNode;
+  /** Dónde guarda el producto los chats (`RemoteThreadListAdapter` de assistant-ui). Sin él, los chats viven en memoria. */
+  hilos?: RemoteThreadListAdapter;
 }) {
   const { superficie, canvas, setSuperficie } = useSuperficie();
   const [ancho, setAncho] = useState(LATERAL.inicial);
   const raiz = useRef<HTMLDivElement>(null);
   const lateral = !canvas && superficie === "lateral";
   return (
-    <AssistantProvider toolkit={toolkit} sugerencias={sugerencias} api={api} instrucciones={instrucciones}>
+    <AssistantProvider toolkit={toolkit} sugerencias={sugerencias} api={api} instrucciones={instrucciones} hilos={hilos}>
       <ProveedorMarca marca={marca}>
       <Box ref={raiz} sx={{ position: "relative", isolation: "isolate", flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
         <Box
