@@ -3,7 +3,6 @@
 import Box from "@mui/material/Box";
 import { useRef } from "react";
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent, RefObject } from "react";
-import textos from "./textos.json";
 
 /** Pasos del teclado, en unidades de spacing. */
 const PASO = 2;
@@ -41,7 +40,7 @@ export function Separador({ ancho, min, max, onCambio, contenedor }: {
       role="separator"
       tabIndex={0}
       aria-orientation="vertical"
-      aria-label={textos.separador}
+      aria-label="Redimensionar paneles"
       aria-valuenow={Math.round(ancho)}
       aria-valuemin={min}
       aria-valuemax={max}

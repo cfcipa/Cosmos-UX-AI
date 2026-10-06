@@ -45,3 +45,9 @@ export const useSuperficie = create<SuperficieState>((set, get) => ({
   },
   cerrarCanvas: () => set({ canvas: false, superficie: get().previa }),
 }));
+
+/** Para la herramienta `abrir_canvas` del producto: abre el documento y devuelve lo que ve el modelo. */
+export const abrirCanvas = (documento: { titulo: string; contenido: string }) => {
+  useSuperficie.getState().abrirCanvas(documento);
+  return { abierto: true, version: useSuperficie.getState().documento?.version };
+};

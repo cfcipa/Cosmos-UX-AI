@@ -15,7 +15,6 @@ import Typography from "@mui/material/Typography";
 import { keyframes } from "@mui/material/styles";
 import { useEffect, type ReactNode } from "react";
 import { useSuperficie, type Superficie } from "./superficie";
-import textos from "./textos.json";
 import { Thread } from "./thread";
 
 /** Medidas de cada superficie, en unidades de spacing del tema. */
@@ -46,14 +45,14 @@ export function EncabezadoAsistente({ modo }: { modo: Modo | "canvas" }) {
   return (
     <Box sx={(t) => ({ display: "flex", alignItems: "center", gap: 1, px: 2, minHeight: t.spacing(ALTO_ENCABEZADO), borderBottom: 1, borderColor: "divider" })}>
       <AutoAwesomeIcon fontSize="small" color="primary" />
-      <Typography variant="subtitle1" sx={{ flex: 1 }}>{textos.titulo}</Typography>
+      <Typography variant="subtitle1" sx={{ flex: 1 }}>Asistente</Typography>
       {documento && modo !== "canvas" ? (
-        <Button size="small" startIcon={<DescriptionOutlinedIcon />} onClick={verCanvas}>{textos.verDocumento}</Button>
+        <Button size="small" startIcon={<DescriptionOutlinedIcon />} onClick={verCanvas}>Ver documento</Button>
       ) : null}
-      {modo === "flotante" ? <Accion label={textos.aLateral} onClick={() => setSuperficie("lateral")}><ViewSidebarOutlinedIcon fontSize="small" /></Accion> : null}
-      {modo === "lateral" ? <Accion label={textos.aCompleta} onClick={() => setSuperficie("completa")}><OpenInFullIcon fontSize="small" /></Accion> : null}
-      {modo === "completa" ? <Accion label={textos.aLateral} onClick={() => setSuperficie("lateral")}><CloseFullscreenIcon fontSize="small" /></Accion> : null}
-      {modo === "canvas" ? null : <Accion label={textos.cerrar} onClick={() => setSuperficie("cerrada")}><CloseIcon fontSize="small" /></Accion>}
+      {modo === "flotante" ? <Accion label="Abrir en panel lateral" onClick={() => setSuperficie("lateral")}><ViewSidebarOutlinedIcon fontSize="small" /></Accion> : null}
+      {modo === "lateral" ? <Accion label="Pantalla completa" onClick={() => setSuperficie("completa")}><OpenInFullIcon fontSize="small" /></Accion> : null}
+      {modo === "completa" ? <Accion label="Abrir en panel lateral" onClick={() => setSuperficie("lateral")}><CloseFullscreenIcon fontSize="small" /></Accion> : null}
+      {modo === "canvas" ? null : <Accion label="Cerrar" onClick={() => setSuperficie("cerrada")}><CloseIcon fontSize="small" /></Accion>}
     </Box>
   );
 }

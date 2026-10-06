@@ -1,79 +1,118 @@
 # @sinco/assistant
 
-Núcleo del asistente de IA de Sinco sobre assistant-ui. No sabe de dominios ni de modelos: cada pantalla de un producto le aporta un
-**contrato** y sus **herramientas**, y cada producto pone **su propio modelo**.
-
-Depende solo del sistema de diseño: el tema (`@sinco/theme`, con la pieza `components.SincoAsistente` que viste el hilo) y la
-insignia de IA (`@sinco/ds`). Forma, color y tipografía del hilo viven en el tema, no en los componentes.
+Asistente de IA sobre [assistant-ui](https://www.assistant-ui.com) y MUI. **Toma el tema de MUI de tu producto** (paleta, espaciado y
+tipografía): no trae tema propio ni depende de ningún otro paquete de Sinco. No sabe de dominios ni de modelos: cada pantalla aporta su
+contexto, sus sugerencias y sus herramientas con las APIs de assistant-ui, y cada producto pone **su propio modelo**.
 
 ## Qué trae
-- Superficies (píldora, flotante, lateral, completa), hilo, canvas, vista previa, tarjeta de aprobación y sugerencias de inicio.
-- `nucleo.toolkit.tsx`: herramientas de cualquier pantalla (`abrir_canvas`).
-- API (`index.ts`): `Asistente`, `ContratoPantalla`, `TarjetaAprobacion`, `estadoTexto`, `useSuperficie`.
-  El toolkit del núcleo se importa aparte: `@sinco/assistant/nucleo.toolkit`.
+- Superficies (píldora, flotante, lateral, completa), hilo, canvas de documentos, vista previa, tarjeta de aprobación y sugerencias.
+- API (`index.ts`): `Asistente`, `TarjetaAprobacion`, `estadoHerramienta`, `abrirCanvas`, `useSuperficie`.
+
+## Instalarlo en un producto con MUI
+1. **MUI.** Lo que ya tienes: `@mui/material`, `@mui/icons-material`, `@emotion/react`, `@emotion/styled` y tu `ThemeProvider`.
+2. **assistant-ui y el paquete:**
+   ```bash
+   npm install @sinco/assistant @assistant-ui/react @assistant-ui/ai-sdk @assistant-ui/next ai zod @ai-sdk/google
+   ```
+   Cambia `@ai-sdk/google` por el paquete del proveedor de tu modelo (`@ai-sdk/openai`, `@ai-sdk/anthropic`…). El resto
+   (`@assistant-ui/react-markdown`, `react-markdown`, `remark-gfm`, `zustand`) llega solo como peer del paquete.
+3. **`next.config.ts`:** `withAui(...)` de `@assistant-ui/next` y `transpilePackages: ["@sinco/assistant"]` (el paquete se publica
+   como TypeScript fuente).
+   ```ts
+   import { withAui } from "@assistant-ui/next";
+   export default withAui({ transpilePackages: ["@sinco/assistant"] });
+   ```
+4. **Montarlo** envolviendo el `<main>` (componente de cliente):
+   ```tsx
+   <Box sx={{ height: "100dvh", display: "flex", flexDirection: "column" }}>
+     <Asistente toolkit={toolkit}>
+       <Box component="main" sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>{children}</Box>
+     </Asistente>
+   </Box>
+   ```
+   Dos supuestos: el `<main>` es **hijo directo** de `<Asistente>` (el paquete le reserva espacio para la píldora), y el contenedor que
+   rodea a `<Asistente>` tiene **altura definida y es flex en columna**.
+5. **La ruta del chat,** `app/api/chat/route.ts`. El modelo lo elige el producto: `modelo` es cualquier modelo de AI SDK.
+   ```ts
+   import { AISDKToolkit } from "@assistant-ui/ai-sdk";
+   import { convertToModelMessages, streamText, type JSONSchema7, type UIMessage } from "ai";
+   import { modelo } from "@/lib/modelo"; // p. ej. google("…"), openai("…") o anthropic("…")
+   import toolkit from "@/lib/assistant/toolkit";
+
+   export const maxDuration = 30;
+   const aiToolkit = new AISDKToolkit({ toolkit });
+
+   export async function POST(req: Request) {
+     const { messages, system, tools }: {
+       messages: UIMessage[]; system?: string; tools?: Record<string, { description?: string; parameters: JSONSchema7 }>;
+     } = await req.json();
+     const result = streamText({
+       model: modelo,
+       messages: await convertToModelMessages(messages),
+       system, // las instrucciones y el contexto de pantalla llegan del cliente; antepón aquí las guías de tu producto si las tienes
+       tools: await aiToolkit.tools({ frontend: tools }),
+     });
+     return result.toUIMessageStreamResponse({ sendReasoning: true });
+   }
+   ```
+6. **El toolkit del producto,** `lib/assistant/toolkit.tsx`. Incluye `abrir_canvas` (el modelo la usa cuando se pide un documento) y
+   suma el toolkit de cada pantalla:
+   ```tsx
+   "use generative";
+   import { defineToolkit } from "@assistant-ui/react";
+   import { z } from "zod";
+   import { abrirCanvas, estadoHerramienta } from "@sinco/assistant";
+   import pantallaToolkit from "@/lib/assistant/pantallas/mi-pantalla.toolkit";
+
+   export default defineToolkit({
+     ...pantallaToolkit,
+     abrir_canvas: {
+       description: "Abre un documento en el canvas (informe, borrador, resumen extenso). Contenido en markdown. Para modificarlo, llámala de nuevo con el mismo título y el contenido completo.",
+       parameters: z.object({ titulo: z.string(), contenido: z.string().describe("Markdown del documento completo") }),
+       execute: async ({ titulo, contenido }) => {
+         "use client";
+         return abrirCanvas({ titulo, contenido });
+       },
+       render: estadoHerramienta("Redactando el documento…", "Documento listo"),
+     },
+   });
+   ```
 
 ## Qué decide el producto
 | Lo que cambia por producto | Dónde se define |
 |---|---|
-| El modelo y su proveedor (Gemini, OpenAI, Anthropic, uno propio…) | En su ruta `/api/chat`. El paquete no importa ningún modelo |
+| El modelo y su proveedor | Su ruta `/api/chat`. El paquete no importa ningún modelo |
+| Aspecto | Su tema de MUI. Ajustes puntuales: `theme.components.SincoAsistente.styleOverrides` (piezas `viewport`, `pie`, `mensajePersona`, `mensajeAsistente`, `estadoHerramienta`, `markdown`) |
+| La marca que firma las respuestas | Propiedad `marca` de `<Asistente>` (por defecto, el destello de MUI) |
+| Rol, idioma y tono base | Propiedad `instrucciones` de `<Asistente>` (por defecto: asistente de Sinco, en español, breve) |
 | La ruta del chat | Propiedad `api` de `<Asistente>` (por defecto `/api/chat`) |
-| Rol, idioma y tono base del asistente | Propiedad `instrucciones` de `<Asistente>` (por defecto: asistente de Sinco, en español, breve) |
-| Pantallas, herramientas y sugerencias | Contratos y toolkits del producto |
-| Aspecto | `@sinco/theme` |
+| Contexto, sugerencias y herramientas de cada pantalla | El producto, con `useAssistantContext`, `<Asistente sugerencias>` y `defineToolkit` |
+
+## Sumar una pantalla
+Todo con las APIs de assistant-ui; el paquete no pone una capa propia encima.
+
+**Contexto** (`useAssistantContext`): un componente de cliente de la pantalla que llama a `useAssistantContext({ getContext })` y se
+monta junto con ella (al salir de la pantalla, su contexto deja de existir). `getContext` devuelve el texto que ve el modelo, calculado
+al enviar cada mensaje: di cuál es la pantalla, las reglas propias y el estado. **Incluye los conteos y totales ya calculados**, por
+estado y por moneda o unidad: el modelo se equivoca al contar y sumar filas, y el paquete le ordena no hacerlo.
+
+**Sugerencias** (`Suggestions()`): una lista estable por pantalla, en el formato de assistant-ui (una frase o `{ title, label, prompt }`),
+que el producto pasa a `<Asistente sugerencias>` según la ruta. Sin lista, el chat vacío no muestra sugerencias.
+
+**Herramientas** (`defineToolkit`): un archivo `"use generative"` por pantalla (por ejemplo `lib/assistant/pantallas/<pantalla>.toolkit.tsx`).
+Lo que cambia datos usa `humanTool()` y arma una propuesta para `TarjetaAprobacion`: la IA propone, la persona decide. Usa las mismas
+acciones y reglas que la interfaz. Se suma `...<pantalla>Toolkit` en el toolkit único del producto; assistant-ui registra un solo toolkit
+en el proveedor y el modelo ve todas sus herramientas, así que en el contexto de cada pantalla di cuáles usar.
+
+Ojo: un aviso en las instrucciones **no impide** que el modelo use una herramienta en otra pantalla (lo probamos). assistant-ui ofrece
+`disabled: true` y `useAuiToolOverrides` (experimental), pero un override **reemplaza la definición completa** de la herramienta: para
+ocultarla sirve, para habilitarla sin su `execute` la deja sin ejecución. Úsalo solo para ocultar.
+
+Una pantalla sin contexto ni sugerencias funciona: el asistente conversa y redacta documentos.
 
 ## Qué asume el paquete
 - **Protocolo de chat de AI SDK** (`ai` y `@assistant-ui/ai-sdk`): es la forma en que el hilo habla con el backend. No es un modelo:
-  AI SDK acepta decenas de proveedores. Un backend que no hable ese protocolo necesitaría otro runtime.
-- **Next con Turbopack, React 19 y MUI 9.**
-- **Textos en español** (`textos.json`), aún sin forma de sobrescribirlos por producto.
-
-## Instalarlo en un producto
-1. Dependencias: `@sinco/assistant`, `@sinco/ds`, `@sinco/theme` y `@sinco/content`. Los demás (assistant-ui, `ai`, `zod`…) llegan
-   solos como peers, **salvo dos que hay que instalar a mano**: `@assistant-ui/next` (trae `withAui`) y el paquete de AI SDK del
-   proveedor de tu modelo (`@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/anthropic`…). En `next.config.ts`: `withAui(...)` y
-   `transpilePackages` con los cuatro paquetes.
-2. En `tsconfig.json`, el alias del toolkit del núcleo:
-   `"@sinco/assistant/nucleo.toolkit": ["<ruta a packages/assistant/src/nucleo.toolkit.tsx>"]`.
-   **Es obligatorio:** el compilador de `"use generative"` solo sigue imports relativos y alias de `tsconfig`; un paquete "pelado"
-   lo trata como no generativo y el build falla (`each tool must be an inline object literal…`).
-3. Montar `<Asistente pantallas={PANTALLAS} toolkit={toolkit}>` envolviendo el `<main>` del producto.
-4. Una ruta `app/api/chat/route.ts`. **El modelo lo elige el producto:** aquí `modelo` es cualquier modelo de AI SDK, por ejemplo
-   `google("…")`, `openai("…")` o `anthropic("…")`, exportado desde un archivo propio del producto.
-
-```ts
-import { AISDKToolkit } from "@assistant-ui/ai-sdk";
-import { SINCO_CONTENT } from "@sinco/content";
-import { convertToModelMessages, streamText, type JSONSchema7, type UIMessage } from "ai";
-import { modelo } from "@/lib/modelo"; // el producto decide su modelo y proveedor
-import toolkit from "@/lib/assistant/toolkit";
-
-export const maxDuration = 30;
-const aiToolkit = new AISDKToolkit({ toolkit });
-
-export async function POST(req: Request) {
-  const { messages, system, tools }: {
-    messages: UIMessage[]; system?: string; tools?: Record<string, { description?: string; parameters: JSONSchema7 }>;
-  } = await req.json();
-  const result = streamText({
-    model: modelo,
-    messages: await convertToModelMessages(messages),
-    // Primero las guías de Sinco (voz, tono, estilo); después lo específico de la pantalla.
-    system: [SINCO_CONTENT, system].filter(Boolean).join("\n\n"),
-    tools: await aiToolkit.tools({ frontend: tools }),
-  });
-  return result.toUIMessageStreamResponse({ sendReasoning: true, onError: (e) => (e instanceof Error ? e.message : String(e)) });
-}
-```
-
-## Sumar una pantalla
-**Contrato** (`lib/assistant/pantallas/<pantalla>.tsx`): `id`, `nombre` (cómo la llama el modelo), `aplica(pathname)`, `contexto()`
-(reglas y estado que ve el modelo, calculado al enviar cada mensaje), `inicios` (sugerencias del chat vacío) y `herramientas`
-(nombres de sus herramientas).
-
-**Herramientas** (`lib/assistant/pantallas/<pantalla>.toolkit.tsx`): un archivo `"use generative"` con `defineToolkit({...})`.
-Lo que cambia datos usa `humanTool()` y arma una propuesta para `TarjetaAprobacion`: la IA propone, la persona decide. Usa las
-mismas acciones y reglas que la interfaz.
-
-**Registrar:** el contrato en `lib/assistant/pantallas/index.ts` y `...<pantalla>Toolkit` en `lib/assistant/toolkit.tsx`.
-
-Una pantalla sin contrato funciona: el asistente conversa y redacta documentos, sin herramientas ni sugerencias propias.
+  AI SDK acepta decenas de proveedores.
+- **Next 16 con Turbopack, React 19 y MUI 9.** El compilador de `"use generative"` solo se probó con Turbopack.
+- **Textos en español**, escritos dentro de cada componente, igual que en los componentes de assistant-ui (que tampoco traen sistema de textos ni propiedades para cambiarlos). Para otro idioma o tono, se edita el texto en el componente.
+- **Tema de MUI estándar:** solo usa claves que todo tema de MUI tiene (`palette` primary, success, error, text, action, background y divider; `spacing`, `shadows`, `transitions`, `zIndex` y las variantes tipográficas `body1`, `caption` y `subtitle1`). Ningún token propio.

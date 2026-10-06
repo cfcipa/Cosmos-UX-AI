@@ -7,7 +7,6 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { useAuiState } from "@assistant-ui/react";
 import { useSuperficie } from "./superficie";
-import textos from "./textos.json";
 import { VistaPrevia } from "./vista-previa";
 
 /** Medidas de la píldora, en unidades de spacing del tema. */
@@ -24,7 +23,7 @@ export const RESERVA_PILDORA = 12;
 export function Pildora() {
   const { pendiente, setSuperficie, verCanvas } = useSuperficie();
   const conMensajes = useAuiState((s) => s.thread.messages.length > 0);
-  const texto = pendiente ? textos.documentoListo : conMensajes ? textos.pildoraSeguir : textos.pildoraInicio;
+  const texto = pendiente ? "Documento listo · Abrir" : conMensajes ? "¿Qué hacemos ahora?" : "¿Por dónde empezamos?";
   return (
     <Paper
       elevation={8}
@@ -36,7 +35,7 @@ export function Pildora() {
     >
       <VistaPrevia />
       <ButtonBase
-        aria-label={textos.abrir}
+        aria-label="Abrir el asistente"
         onClick={pendiente ? verCanvas : () => setSuperficie("flotante")}
         sx={{ width: "100%", height: "100%", borderRadius: "inherit", justifyContent: "flex-start", gap: 1, px: 2 }}
       >

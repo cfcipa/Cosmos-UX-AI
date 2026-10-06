@@ -13,7 +13,6 @@ import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useSuperficie } from "./superficie";
-import textos from "./textos.json";
 import { COMPONENTES_MARKDOWN } from "./markdown";
 import { ALTO_ENCABEZADO, EncabezadoAsistente } from "./panel-asistente";
 import { Thread } from "./thread";
@@ -37,14 +36,14 @@ function Documento() {
       <Box sx={(t) => ({ display: "flex", alignItems: "center", gap: 1, px: 2, minHeight: t.spacing(ALTO_ENCABEZADO), borderBottom: 1, borderColor: "divider" })}>
         <DescriptionOutlinedIcon fontSize="small" color="action" />
         <Typography variant="subtitle1" noWrap sx={{ flex: 1 }}>{documento.titulo}</Typography>
-        <Chip size="small" label={`${textos.version}${documento.version}`} />
-        <Tooltip title={textos.copiarDocumento}>
-          <IconButton size="small" aria-label={textos.copiarDocumento} onClick={copiar}>
+        <Chip size="small" label={`v${documento.version}`} />
+        <Tooltip title="Copiar documento">
+          <IconButton size="small" aria-label="Copiar documento" onClick={copiar}>
             {copiado ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
-        <Tooltip title={textos.cerrarDocumento}>
-          <IconButton size="small" aria-label={textos.cerrarDocumento} onClick={cerrarCanvas}><CloseIcon fontSize="small" /></IconButton>
+        <Tooltip title="Cerrar documento">
+          <IconButton size="small" aria-label="Cerrar documento" onClick={cerrarCanvas}><CloseIcon fontSize="small" /></IconButton>
         </Tooltip>
       </Box>
       <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 3 }}>

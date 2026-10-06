@@ -10,7 +10,6 @@ import Tooltip from "@mui/material/Tooltip";
 import { useAuiState, type AssistantState } from "@assistant-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { useSuperficie } from "./superficie";
-import textos from "./textos.json";
 
 /** Cuánto asoma la respuesta antes de recogerse sola. */
 const RECOGE_MS = 4000;
@@ -43,20 +42,24 @@ export function VistaPrevia() {
   const clave = useAuiState(claveRespuesta);
   const texto = useAuiState(textoRespuesta);
   const [visible, setVisible] = useState(false);
-  const ultima = useRef(clave);
+  const [claveVista, setClaveVista] = useState(clave);
   const encima = useRef(false);
   const timer = useRef<number | undefined>(undefined);
   const espera = clave.endsWith(ESPERA);
 
+  // Estado derivado al renderizar (patrón de React para ajustar estado cuando cambian las props): una respuesta nueva con el
+  // asistente cerrado se muestra; abrir el asistente la oculta. Los efectos quedan solo para el temporizador.
+  if (clave !== claveVista) {
+    setClaveVista(clave);
+    if (clave && superficie === "cerrada") setVisible(true);
+  }
+  if (superficie !== "cerrada" && visible) setVisible(false);
+
   useEffect(() => {
-    if (superficie !== "cerrada") { ultima.current = clave; setVisible(false); return; }
-    if (!clave || clave === ultima.current) return;
-    ultima.current = clave;
-    setVisible(true);
     window.clearTimeout(timer.current);
-    if (!espera) timer.current = window.setTimeout(() => { if (!encima.current) setVisible(false); }, RECOGE_MS);
-  }, [clave, superficie, espera]);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+    if (visible && !espera) timer.current = window.setTimeout(() => { if (!encima.current) setVisible(false); }, RECOGE_MS);
+    return () => window.clearTimeout(timer.current);
+  }, [visible, espera, clave]);
 
   if (superficie !== "cerrada" || !visible || (!texto && !espera)) return null;
   return (
@@ -68,8 +71,8 @@ export function VistaPrevia() {
     >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <AutoAwesomeIcon fontSize="small" color="primary" />
-        <Tooltip title={textos.ocultar}>
-          <IconButton size="small" aria-label={textos.ocultar} onClick={() => setVisible(false)}><CloseIcon fontSize="small" /></IconButton>
+        <Tooltip title="Ocultar la respuesta">
+          <IconButton size="small" aria-label="Ocultar la respuesta" onClick={() => setVisible(false)}><CloseIcon fontSize="small" /></IconButton>
         </Tooltip>
       </Box>
       <ButtonBase
@@ -79,7 +82,7 @@ export function VistaPrevia() {
           textAlign: "start", justifyContent: "flex-start", color: espera ? "primary.main" : "text.primary", "&:hover": { color: "primary.main" },
         })}
       >
-        {espera ? textos.aprobacion : texto}
+        {espera ? "Necesito tu aprobación para continuar. Ábrelo para decidir." : texto}
       </ButtonBase>
     </Paper>
   );

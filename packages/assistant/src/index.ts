@@ -1,5 +1,4 @@
 export { Asistente } from "./asistente";
-export { contratoDe, type ContratoPantalla, type Inicio } from "./contrato";
-export { EstadoHerramienta, estadoTexto } from "./estado-herramienta";
+export { EstadoHerramienta, estadoHerramienta } from "./estado-herramienta";
 export { TarjetaAprobacion, type Decision, type Propuesta } from "./tarjeta-aprobacion";
-export { useSuperficie, type Superficie } from "./superficie";
+export { abrirCanvas, useSuperficie, type Superficie } from "./superficie";

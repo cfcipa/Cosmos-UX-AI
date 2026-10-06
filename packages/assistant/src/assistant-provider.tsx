@@ -1,64 +1,54 @@
 "use client";
 
-import { AssistantRuntimeProvider, AuiConfig, Tools, useAssistantContext, type Toolkit } from "@assistant-ui/react";
+import { AssistantRuntimeProvider, AuiConfig, Suggestions, Tools, useAssistantInstructions, type SuggestionConfig, type Toolkit } from "@assistant-ui/react";
 import { AssistantChatTransport, useChatRuntime } from "@assistant-ui/ai-sdk";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
-import { usePathname } from "next/navigation";
 import { useMemo, type ReactNode } from "react";
-import { contratoDe, type ContratoPantalla } from "./contrato";
-import { ProveedorPantallaActual, usePantallaActual } from "./pantalla-actual";
 
 const RUTA_CHAT = "/api/chat";
+const SIN_SUGERENCIAS: readonly SuggestionConfig[] = [];
 const INSTRUCCIONES_BASE = "Eres el asistente de Sinco. Responde en español, breve.";
 
 const DOCUMENTOS =
   "Usa abrir_canvas SOLO cuando la persona pida explícitamente un documento (informe, borrador, acta, carta) y con el contenido en markdown; en el chat responde una frase. Los resúmenes, listados y respuestas cortas van en el chat, sin canvas. Si piden un cambio a ese documento, vuelve a llamar abrir_canvas con el mismo título y el contenido completo actualizado.";
 
-/** Lo que la IA "ve": las reglas del núcleo y lo que aporta la pantalla actual, calculado al enviar cada mensaje. */
-function ContextoDePantalla({ instrucciones }: { instrucciones: string }) {
-  const { pathname, pantallas, contrato } = usePantallaActual();
-  useAssistantContext({
-    getContext: () => {
-      const propias = contrato?.herramientas ?? [];
-      const ajenas = pantallas.flatMap((c) => c.herramientas).filter((h) => !propias.includes(h));
-      return [
-        instrucciones,
-        contrato
-          ? `Pantalla actual: ${contrato.nombre}.`
-          : `Pantalla actual: ${pathname}. Esta pantalla todavía no aporta herramientas propias; puedes conversar y redactar documentos.`,
-        ajenas.length ? `Las herramientas ${ajenas.join(", ")} pertenecen a otras pantallas: no las uses aquí.` : "",
-        DOCUMENTOS,
-        contrato?.contexto() ?? "",
-      ].filter(Boolean).join("\n");
-    },
-  });
+const CIFRAS =
+  "Cantidades y totales: usa solo las cifras que traiga el contexto de la pantalla; no cuentes ni sumes filas por tu cuenta. Si no hay una cifra calculada, di que no la tienes. Nunca mezcles monedas ni unidades distintas en un mismo total.";
+
+const HERRAMIENTAS =
+  "Herramientas de pantalla (filtrar, seleccionar, proponer cambios): úsalas solo si el contexto de la pantalla actual las nombra. Si no hay contexto de pantalla, no las uses; solo puedes conversar y redactar documentos.";
+
+/** Lo fijo: rol, tono y reglas del núcleo. Se registra una vez (`useAssistantInstructions` es para texto estático). */
+function InstruccionesBase({ instrucciones }: { instrucciones: string }) {
+  useAssistantInstructions([instrucciones, DOCUMENTOS, CIFRAS, HERRAMIENTAS].join("\n"));
   return null;
 }
 
 /**
- * El runtime del asistente y el contexto de pantalla. No conoce ningún dominio: recibe las pantallas registradas y el
- * toolkit con todas las herramientas instaladas.
+ * El runtime del asistente. No conoce ningún dominio: recibe el toolkit con todas las herramientas instaladas y las
+ * sugerencias del chat vacío. El contexto de cada pantalla lo registra la pantalla misma con `useAssistantContext`.
  */
-export function AssistantProvider({ pantallas, toolkit, children, api = RUTA_CHAT, instrucciones = INSTRUCCIONES_BASE }: {
-  pantallas: readonly ContratoPantalla[]; toolkit: Toolkit; children: ReactNode;
+export function AssistantProvider({ toolkit, children, sugerencias = SIN_SUGERENCIAS, api = RUTA_CHAT, instrucciones = INSTRUCCIONES_BASE }: {
+  toolkit: Toolkit; children: ReactNode;
+  /** Sugerencias del chat vacío (`Suggestions()` de assistant-ui). Cambian con la pantalla: pasa una lista estable por pantalla. */
+  sugerencias?: readonly SuggestionConfig[];
   /** Ruta del backend que atiende el chat. */
   api?: string;
   /** Instrucciones base del asistente (idioma, tono, rol). Cada producto puede cambiarlas. */
   instrucciones?: string;
 }) {
-  const pathname = usePathname();
-  const config = useMemo(() => AuiConfig({ tools: Tools({ toolkit }) }), [toolkit]);
-  const actual = useMemo(() => ({ pathname, pantallas, contrato: contratoDe(pantallas, pathname) }), [pathname, pantallas]);
+  const config = useMemo(
+    () => AuiConfig({ tools: Tools({ toolkit }), suggestions: Suggestions([...sugerencias]) }),
+    [toolkit, sugerencias],
+  );
   const runtime = useChatRuntime({
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     transport: new AssistantChatTransport({ api }),
   });
   return (
-    <ProveedorPantallaActual value={actual}>
-      <AssistantRuntimeProvider runtime={runtime} config={config}>
-        <ContextoDePantalla instrucciones={instrucciones} />
-        {children}
-      </AssistantRuntimeProvider>
-    </ProveedorPantallaActual>
+    <AssistantRuntimeProvider runtime={runtime} config={config}>
+      <InstruccionesBase instrucciones={instrucciones} />
+      {children}
+    </AssistantRuntimeProvider>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 import type {} from "@mui/x-data-grid/themeAugmentation";
-import { createTheme, type CSSObject } from "@mui/material/styles";
-import type { CSSProperties } from "react";
+import { createTheme } from "@mui/material/styles";
 import {
   ai, background, elevations, error, grey, info, ink, primary, scrim, secondary, success, text, tones, warning,
 } from "./tokens";
@@ -18,38 +17,10 @@ declare module "@mui/material/styles" {
   }
 }
 
-declare module "@mui/material/styles" {
-  interface TypographyVariants {
-    /** Código en línea y en bloque (fuera de Cosmos: el hilo del asistente lo necesita). */
-    code: CSSProperties;
-  }
-  interface TypographyVariantsOptions {
-    code?: CSSProperties;
-  }
-}
-
-declare module "@mui/material/Typography" {
-  interface TypographyPropsVariantOverrides {
-    code: true;
-  }
-}
-
 declare module "@mui/material/Paper" {
   interface PaperPropsVariantOverrides {
     /** Contenedor con presencia de IA: borde, aura y sombra interior de `palette.ai`. */
     ai: true;
-  }
-}
-
-/** Piezas del hilo del asistente que el tema gobierna: viven en `components.SincoAsistente.styleOverrides`. */
-type PiezaAsistente = "viewport" | "pie" | "mensajePersona" | "mensajeAsistente" | "estadoHerramienta" | "markdown";
-
-declare module "@mui/material/styles" {
-  interface Components<Theme = unknown> {
-    /** Hilo del asistente (assistant-ui): sus primitivas no traen estilo, así que cada pieza se viste desde aquí. */
-    SincoAsistente?: {
-      styleOverrides?: Partial<Record<PiezaAsistente, CSSObject | ((a: { theme: Theme }) => CSSObject)>>;
-    };
   }
 }
 
@@ -88,7 +59,8 @@ export const theme = createTheme({
   shape: { borderRadius: 4 },
   shadows,
   typography: {
-    fontFamily: "var(--font-inter), system-ui, sans-serif",
+    // Si el producto no define --font-inter (next/font), cae a Inter instalada o a la sans del sistema; nunca a serif.
+    fontFamily: "var(--font-inter, Inter), system-ui, sans-serif",
     fontSize: 13,
     h1: { fontSize: "1.125rem", lineHeight: "1.5rem", fontWeight: 600, letterSpacing: 0 }, // 18/24 títulos de página
     h2: { fontSize: "1rem", lineHeight: "1.375rem", fontWeight: 600, letterSpacing: ".15px" }, // 16/22 títulos de sección
@@ -98,35 +70,9 @@ export const theme = createTheme({
     body2: { fontSize: ".8125rem", lineHeight: "1rem", letterSpacing: ".17px" }, // 13/16 base de la UI
     caption: { fontSize: ".6875rem", lineHeight: ".875rem", letterSpacing: ".4px" }, // 11/14 metadatos
     overline: { fontSize: ".6875rem", lineHeight: "1.5rem", letterSpacing: "1px", fontWeight: 500, textTransform: "uppercase" },
-    code: { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace", fontSize: ".75rem", lineHeight: "1rem" }, // 12/16 código
     button: { fontSize: ".8125rem", lineHeight: "1rem", fontWeight: 500, letterSpacing: ".1px", textTransform: "none" },
   },
   components: {
-    // Hilo del asistente: forma, color y tipografía de cada pieza salen del tema, como en el resto de la aplicación.
-    SincoAsistente: {
-      styleOverrides: {
-        viewport: ({ theme }) => ({ padding: theme.spacing(2), gap: theme.spacing(2) }),
-        pie: ({ theme }) => ({ backgroundColor: theme.palette.background.paper, paddingBottom: theme.spacing(1.5) }),
-        mensajePersona: ({ theme }) => ({
-          maxWidth: "85%",
-          padding: theme.spacing(1.25, 1.75),
-          borderRadius: theme.spacing(2),
-          backgroundColor: theme.palette.tones.primary.bg,
-          color: theme.palette.text.primary,
-          ...theme.typography.body1,
-        }),
-        // La IA se firma con su insignia a la izquierda de cada respuesta.
-        mensajeAsistente: ({ theme }) => ({ columnGap: theme.spacing(1) }),
-        estadoHerramienta: ({ theme }) => ({
-          gap: theme.spacing(0.75),
-          marginBlock: theme.spacing(0.5),
-          color: theme.palette.text.secondary,
-          ...theme.typography.caption,
-          "& .MuiSvgIcon-root": { color: theme.palette.success.dark },
-        }),
-        markdown: ({ theme }) => ({ ...theme.typography.body1, overflowWrap: "anywhere" }),
-      },
-    },
     MuiCssBaseline: { styleOverrides: { body: { backgroundColor: background.default } } },
     MuiButton: {
       defaultProps: { disableElevation: true },

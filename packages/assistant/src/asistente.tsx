@@ -2,11 +2,11 @@
 
 import Box from "@mui/material/Box";
 import { keyframes } from "@mui/material/styles";
-import type { Toolkit } from "@assistant-ui/react";
+import type { SuggestionConfig, Toolkit } from "@assistant-ui/react";
 import { useRef, useState, type ReactNode } from "react";
-import type { ContratoPantalla } from "./contrato";
 import { useSuperficie } from "./superficie";
 import { AssistantProvider } from "./assistant-provider";
+import { ProveedorMarca } from "./marca";
 import { VistaCanvas } from "./documento-canvas";
 import { PanelAsistente, SIN_MOVIMIENTO } from "./panel-asistente";
 import { Pildora, RESERVA_PILDORA } from "./pildora";
@@ -27,19 +27,24 @@ const MITAD = "50%";
  * lateral, completa) o que el modelo pide con la herramienta `abrir_canvas`. La pantalla nunca se desmonta. El contenedor
  * es su propio nivel de apilamiento (`isolation`): el encabezado de la aplicación queda por encima de todo y su sombra cae igual sobre la pantalla y sobre el asistente.
  */
-export function Asistente({ pantallas, toolkit, children, api, instrucciones }: {
-  pantallas: readonly ContratoPantalla[]; toolkit: Toolkit; children: ReactNode;
+export function Asistente({ toolkit, children, sugerencias, api, instrucciones, marca }: {
+  toolkit: Toolkit; children: ReactNode;
+  /** Sugerencias del chat vacío para la pantalla actual (`Suggestions()` de assistant-ui). Pasa una lista estable por pantalla. */
+  sugerencias?: readonly SuggestionConfig[];
   /** Ruta del backend del chat (por defecto `/api/chat`). */
   api?: string;
   /** Instrucciones base del asistente: idioma, tono y rol (por defecto, el asistente de Sinco en español). */
   instrucciones?: string;
+  /** Marca que firma cada respuesta (por defecto, el destello de MUI). Por ejemplo, la insignia de IA de tu sistema de diseño. */
+  marca?: ReactNode;
 }) {
   const { superficie, canvas, setSuperficie } = useSuperficie();
   const [ancho, setAncho] = useState(LATERAL.inicial);
   const raiz = useRef<HTMLDivElement>(null);
   const lateral = !canvas && superficie === "lateral";
   return (
-    <AssistantProvider pantallas={pantallas} toolkit={toolkit} api={api} instrucciones={instrucciones}>
+    <AssistantProvider toolkit={toolkit} sugerencias={sugerencias} api={api} instrucciones={instrucciones}>
+      <ProveedorMarca marca={marca}>
       <Box ref={raiz} sx={{ position: "relative", isolation: "isolate", flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
         <Box
           // Con el canvas encima la pantalla sigue montada y con su scroll, pero fuera del alcance del teclado y los lectores.
@@ -63,6 +68,7 @@ export function Asistente({ pantallas, toolkit, children, api, instrucciones }: 
         {!canvas && superficie !== "cerrada" ? <PanelAsistente modo={superficie} ancho={ancho} maxAncho={MITAD} /> : null}
         {!canvas && superficie === "cerrada" ? <Pildora /> : null}
       </Box>
+      </ProveedorMarca>
     </AssistantProvider>
   );
 }
